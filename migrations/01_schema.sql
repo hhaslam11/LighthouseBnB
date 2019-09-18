@@ -21,7 +21,7 @@ CREATE TABLE properties (
   city VARCHAR (30) NOT NULL,
   province VARCHAR (30) NOT NULL,
   post_code VARCHAR (10) NOT NULL,
-  active BOOLEAN NOT NULL
+  active BOOLEAN NOT NULL DEFAULT true
 );
 
 CREATE TABLE users (
