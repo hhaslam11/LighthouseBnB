@@ -93,15 +93,14 @@ exports.getAllReservations = getAllReservations;
  * minimum_rating
  */
 const getAllProperties = function(options, limit = 10) {
-  console.log(options);
   const optionArr = [];
   let queryString =  `
     SELECT properties.*, AVG(property_reviews.rating) AS average_rating
     FROM properties
-    JOIN property_reviews ON property_reviews.property_id = properties.id
+    FULL OUTER JOIN property_reviews ON property_reviews.property_id = properties.id
   `;
 
-  if (options.city || options.owner_id || options.minimum_price_per_night || options.maximum_price_per_night) queryString += 'WHERE ';//TODO fix this
+  if (options.city || options.owner_id || options.minimum_price_per_night || options.maximum_price_per_night) queryString += 'WHERE ';
 
   if (options.city) {
     optionArr.push(`%${options.city}%`);
@@ -138,8 +137,6 @@ const getAllProperties = function(options, limit = 10) {
   optionArr.push(limit);
   queryString += `LIMIT $${optionArr.length};`;
 
-  console.log(queryString);
-
   return pool.query(queryString, optionArr)
     .then(res => res.rows);
 };
@@ -151,9 +148,18 @@ exports.getAllProperties = getAllProperties;
  * @return {Promise<{}>} A promise to the property.
  */
 const addProperty = function(property) {
-  const propertyId = Object.keys(properties).length + 1;
-  property.id = propertyId;
-  properties[propertyId] = property;
-  return Promise.resolve(property);
+  console.log('WHAT IS IN THIS: ', property);
+  return pool.query(`
+    INSERT INTO properties (
+                            title, description, number_of_bedrooms, number_of_bathrooms,
+                            parking_spaces, cost_per_night, thumbnail_photo_url, cover_photo_url,
+                            street, country, city, province, post_code, owner_id
+                           )
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+    RETURNING *;
+  `, Object.values(property))
+    .then(res => res.rows[0]);
 };
+
+
 exports.addProperty = addProperty;
